@@ -14,14 +14,15 @@ import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.LinkedList;
 
 public class FetchWord extends AsyncTask<String, Void, String> {
-    private WeakReference<TextView> mWordText;
-    private WeakReference<TextView> mDefText;
+    private WeakReference<LinkedList> mSpeechList;
+    private WeakReference<LinkedList> mDefList;
 
-    FetchWord(TextView wordText, TextView defText) {
-        this.mWordText = new WeakReference<>(wordText);
-        this.mDefText = new WeakReference<>(defText);
+    FetchWord(LinkedList speechList, LinkedList defList) {
+        this.mSpeechList = new WeakReference<>(speechList);
+        this.mDefList = new WeakReference<>(defList);
     }
 
     protected String getWordInfo(String query) throws IOException {
@@ -64,22 +65,23 @@ public class FetchWord extends AsyncTask<String, Void, String> {
 
     protected void onPostExecute(String s) {
         super.onPostExecute(s);
-        String word = null;
+        String partOfSpeech = null;
         String definition = null;
         JSONObject jsonObject = null;
-        JSONArray itemsArray = null;
-        int i = 0;
+        JSONArray meaningsArray = null;
         try {
             jsonObject = new JSONObject(s);
-            itemsArray = jsonObject.getJSONArray("items");
-            while (i < itemsArray.length() && word == null && definition == null) {
-                JSONObject dict = itemsArray.getJSONObject(i);
-                JSONObject volumeInfo = dict.getJSONObject("volumeInfo");
-                word = volumeInfo.getString("word");
-                definition = volumeInfo.getString("authors");
-                mWordText.get().setText(word);
-                mDefText.get().setText(definition);
-                i++;
+            meaningsArray = jsonObject.getJSONArray("meanings");
+            for (int i = 0; i < meaningsArray.length(); i++) {
+                JSONObject entry = meaningsArray.getJSONObject(i);
+                partOfSpeech = entry.getString("partOfSpeech");
+                JSONArray defs = entry.getJSONArray("definition");
+                for (int j = 0; j < defs.length(); j++) {
+                    JSONObject dict = defs.getJSONObject(j);
+                    definition = dict.getString("definition");
+                    mSpeechList.get().add(partOfSpeech);
+                    mDefList.get().add(definition);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
