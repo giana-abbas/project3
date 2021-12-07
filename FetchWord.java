@@ -14,6 +14,7 @@ import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.LinkedList;
 
 public class FetchWord extends AsyncTask<String, Void, String> {
@@ -67,20 +68,28 @@ public class FetchWord extends AsyncTask<String, Void, String> {
         super.onPostExecute(s);
         String partOfSpeech = null;
         String definition = null;
+        JSONArray jsonArray = null;
         JSONObject jsonObject = null;
         JSONArray meaningsArray = null;
         try {
-            jsonObject = new JSONObject(s);
+            jsonArray = new JSONArray(s);
+            jsonObject = jsonArray.getJSONObject(0);
             meaningsArray = jsonObject.getJSONArray("meanings");
             for (int i = 0; i < meaningsArray.length(); i++) {
                 JSONObject entry = meaningsArray.getJSONObject(i);
                 partOfSpeech = entry.getString("partOfSpeech");
-                JSONArray defs = entry.getJSONArray("definition");
+                JSONArray defs = entry.getJSONArray("definitions");
                 for (int j = 0; j < defs.length(); j++) {
                     JSONObject dict = defs.getJSONObject(j);
                     definition = dict.getString("definition");
+                    Log.e("pos", partOfSpeech);
+                    Log.e("def", definition);
                     mSpeechList.get().add(partOfSpeech);
                     mDefList.get().add(definition);
+                    if (j == defs.length() - 1) {
+                        Log.e("ll", mSpeechList.get().toString());
+                        Log.e("ll", mDefList.get().toString());
+                    }
                 }
             }
         } catch (Exception e) {
